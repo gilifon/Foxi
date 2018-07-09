@@ -87,6 +87,7 @@ class CC1150
     // custom commands
     void send_command(unsigned int command);
     void sendSerialData(byte* data, int numberOfBits, int delay, int repetitions = 1);
+    void sendMessage();
 
     // commands
     void transmit(void);
@@ -99,9 +100,13 @@ class CC1150
     void waitMiso(void);
     void select(void);
     void deselect(void);
+    void beep(bool isTone);
+    void SendLetter(String s);
+    void Dit(void);
+    void Dat(void);
 
     // functions to send serial data
-    void ISR_MISO(void);
+    void Flip(bool isTone);
     inline void enableMisoInterrupt(void);
     void generateFakeInterrupts(void);
     inline void disableMisoInterrupt(void);

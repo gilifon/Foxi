@@ -64,6 +64,7 @@ class Foxi
     void setupRFT();
     void resetGDO();
     void sendCommand(byte* data, int length, int repetitions = 1);
+    void sendMessage();
   private:
     void setupDefaultFOXIRegisters();
 };

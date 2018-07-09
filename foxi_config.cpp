@@ -23,6 +23,13 @@ void Foxi::sendCommand(byte* data, int length, int repetitions) {
   resetGDO();
 }
 
+void Foxi::sendMessage() {
+
+  setupRF();
+  cc1150.sendMessage();
+  resetGDO();
+}
+
 void Foxi::setupRF() {
   cc1150.reset();
   cc1150.writeRegister(CC1150_IOCFG0, CC1150_DEFVAL_IOCFG1);

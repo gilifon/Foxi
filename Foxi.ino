@@ -6,14 +6,11 @@
 #include "foxi_config.h"
 
 Foxi foxi;
-const byte data[] =  {0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00,
-                      0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF,
-                      0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF
-                     };
+const byte data[] =  {0x00, 0xFF};
 
-const String message = "HELLO I AM FOX3 3 3";
-const unsigned int preSignaDelay = 5000;
-const unsigned int postSignaDelay = 10000;
+const String message = "HELLO I AM FOX1 1 1";
+const unsigned int preSignaDelay = 1000;
+const unsigned int postSignaDelay = 15000;
 
 void setup() {
   Serial.begin(9600);
@@ -22,10 +19,9 @@ void setup() {
 
 void loop() {
   delay(preSignaDelay);
-  for (int i = 0; i < message.length(); i++)
-  {
-    SendLetter(String(message[i]));
-  }
+  foxi.begin();
+  foxi.sendMessage();
+  foxi.end();
   delay(postSignaDelay);
 }
 
@@ -38,13 +34,13 @@ void Send(int rep)
 
 void Dit()
 {
-  Send(1);
+  Send(30); 
   delay(100);
 }
 
 void Dat()
 {
-  Send(3);
+  Send(90);
   delay(100);
 }
 

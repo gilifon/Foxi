@@ -63,6 +63,8 @@ void CC1150::end(void) {
 void CC1150::setup(void) {
   delay(100); // wait for the CC1150 to power-up (
 }
+
+int i = 0;
 void CC1150::sendSerialData(byte* data, int numberOfBits, int delay, int repetitions) {
   repetitionCounter = repetitions;
   dataIndexBits = 0;
@@ -79,34 +81,38 @@ void CC1150::sendSerialData(byte* data, int numberOfBits, int delay, int repetit
   disableMisoInterrupt();
   dataBuffer = NULL;
 }
+
+void CC1150::sendMessage() {
+  i = 0;
+  enableMisoInterrupt();
+}
+
 uint8_t currentGDO0;
+void CC1150::Flip(bool isTone) {
+  if (isTone)
+  {
+    if (currentGDO0 == LOW && i % 8 < 7) {
 
-void CC1150::ISR_MISO() {
-  if (dataIndexBits < dataLengthBits * repetitionCounter) { // check if there is any more data to send
-    byte bufferValue = dataBuffer[bufferIndex];
-    
-    if (bufferValue & mask) {
-      if (currentGDO0 != HIGH) {
-        digitalWriteFast2(GDO0, HIGH);
-        currentGDO0 = HIGH;
-      }
     }
-    else {
-      if (currentGDO0 != LOW) {
-        digitalWriteFast2(GDO0, LOW);
-        currentGDO0 = LOW;
-      }
+    else if (currentGDO0 == LOW && i % 8 == 7) {
+      digitalWriteFast2(GDO0, HIGH);
+      currentGDO0 = HIGH;
     }
+    else if (currentGDO0 == HIGH && i % 8 < 7) {
 
-    mask >>= 1;
-
-    if (mask == 0)
+    }
+    else if (currentGDO0 == HIGH && i % 8 == 7) {
+      digitalWriteFast2(GDO0, LOW);
+      currentGDO0 = LOW;
+    }
+  }
+  else //noTone
+  {
+    if (currentGDO0 == HIGH)
     {
-      mask = 10000000; //reset mask
-      bufferIndex = (bufferIndex + 1) % (dataLengthBits / 8); //goto next byte in the data-array
+      digitalWriteFast2(GDO0, LOW);
+      currentGDO0 = LOW;
     }
-
-    dataIndexBits++; //increase bits send
   }
 }
 void CC1150::enableMisoInterrupt() {
@@ -118,13 +124,55 @@ void CC1150::enableMisoInterrupt() {
   generateFakeInterrupts();
 }
 void CC1150::generateFakeInterrupts() {
-  int previousMiso = -1;
-  int currentMiso = -1;
-
   noInterrupts();
 
-  ISR_MISO(); //queue the first bit, because the code below waits for the first RISING edge to queue the next
+  Flip(true); //queue the first bit, because the code below waits for the first RISING edge to queue the next
+//  SendLetter(" ");
+//  SendLetter("C");
+//  SendLetter("Q");
+//  SendLetter(" ");
+//  SendLetter("C");
+//  SendLetter("Q");
+//  SendLetter(" ");
+//  SendLetter("C");
+//  SendLetter("Q");
+//  SendLetter(" ");
+//  SendLetter("4");
+//  SendLetter("Z");
+//  SendLetter("1");
+//  SendLetter("K");
+//  SendLetter("D");
+//  SendLetter(" ");
+//  SendLetter("K");
+  
+  SendLetter(" ");
+  SendLetter("H");
+  SendLetter("E");
+  SendLetter("L");
+  SendLetter("L");
+  SendLetter("O");
+  SendLetter(" ");
+  SendLetter("I");
+  SendLetter(" ");
+  SendLetter("A");
+  SendLetter("M");
+  SendLetter(" ");
+  SendLetter("F");
+  SendLetter("O");
+  SendLetter("X");
+  SendLetter("1");
+  SendLetter(" ");
+  SendLetter("1");
+  SendLetter(" ");
+  SendLetter("1");
+  disableMisoInterrupt();
+  select();  // disable the transmission of new data (caller should issue a command to the CC1150 after transmission of data)
+  interrupts();
+}
 
+void CC1150::beep(bool isTone) {
+  int previousMiso = -1;
+  int currentMiso = -1;
   do
   {
     currentMiso = digitalReadFast2(SPI_MISO);
@@ -140,17 +188,185 @@ void CC1150::generateFakeInterrupts() {
           // extra delay to make the RISING edge fall nicely in the middle of the data
           delayMicroseconds(delayAfterSerialWrite);
         }
-        ISR_MISO();
+        i++;
+        Flip(isTone);
       }
       previousMiso = currentMiso;
     }
   }
-  while (dataIndexBits < dataLengthBits * repetitionCounter);
+  while (i < 512);
   // wait for the last clock to become high so the last queued bit is also sent
   while (digitalReadFast2(SPI_MISO) == LOW);
-  select();  // disable the transmission of new data (caller should issue a command to the CC1150 after transmission of data)
-  interrupts();
+  i = 0;
 }
+
 void CC1150::disableMisoInterrupt() {
   pinMode(GDO0, INPUT);        // sets the digital pin as output
+}
+
+void CC1150::Dit()
+{
+  beep(true);
+  beep(false);
+}
+
+void CC1150::Dat()
+{
+  beep(true);
+  beep(true);
+  beep(true);
+  beep(false);
+}
+
+void CC1150::SendLetter(String letter)
+{
+  if (letter == "A")
+  {
+    Dit(); Dat();
+  }
+  else if (letter == "B")
+  {
+    Dat(); Dit(); Dit(); Dit();
+  }
+  else if (letter == "C")
+  {
+    Dat(); Dit(); Dat(); Dit();
+  }
+  else if (letter == "D")
+  {
+    Dat(); Dit(); Dit();
+  }
+  else if (letter == "E")
+  {
+    Dit();
+  }
+  else if (letter == "F")
+  {
+    Dit(); Dit(); Dat(); Dit();
+  }
+  else if (letter == "G")
+  {
+    Dat(); Dat(); Dit();
+  }
+  else if (letter == "H")
+  {
+    Dit(); Dit(); Dit(); Dit();
+  }
+  else if (letter == "I")
+  {
+    Dit(); Dit();
+  }
+  else if (letter == "J")
+  {
+    Dit(); Dat(); Dat(); Dat();
+  }
+  else if (letter == "K")
+  {
+    Dat(); Dit(); Dat();
+  }
+  else if (letter == "L")
+  {
+    Dit(); Dat(); Dit(); Dit();
+  }
+  else if (letter == "M")
+  {
+    Dat(); Dat();
+  }
+  else if (letter == "N")
+  {
+    Dat(); Dit();
+  }
+  else if (letter == "O")
+  {
+    Dat(); Dat(); Dat();
+  }
+  else if (letter == "P")
+  {
+    Dit(); Dat(); Dat(); Dit();
+  }
+  else if (letter == "Q")
+  {
+    Dat(); Dat(); Dit(); Dat();
+  }
+  else if (letter == "R")
+  {
+    Dit(); Dat(); Dit();
+  }
+  else if (letter == "S")
+  {
+    Dit(); Dit(); Dit();
+  }
+  else if (letter == "T")
+  {
+    Dat();
+  }
+  else if (letter == "U")
+  {
+    Dit(); Dit(); Dat();
+  }
+  else if (letter == "V")
+  {
+    Dit(); Dit(); Dit(); Dat();
+  }
+  else if (letter == "W")
+  {
+    Dit(); Dat(); Dat();
+  }
+  else if (letter == "X")
+  {
+    Dat(); Dit(); Dit(); Dat();
+  }
+  else if (letter == "Y")
+  {
+    Dat(); Dit(); Dat(); Dat();
+  }
+  else if (letter == "Z")
+  {
+    Dat(); Dat(); Dit(); Dit();
+  }
+  else if (letter == "0")
+  {
+    Dat(); Dat(); Dat(); Dat(); Dat();
+  }
+  else if (letter == "1")
+  {
+    Dit(); Dat(); Dat(); Dat(); Dat();
+  }
+  else if (letter == "2")
+  {
+    Dit(); Dit(); Dat(); Dat(); Dat();
+  }
+  else if (letter == "3")
+  {
+    Dit(); Dit(); Dit(); Dat(); Dat();
+  }
+  else if (letter == "4")
+  {
+    Dit(); Dit(); Dit(); Dit(); Dat();
+  }
+  else if (letter == "5")
+  {
+    Dit(); Dit(); Dit(); Dit(); Dit();
+  }
+  else if (letter == "6")
+  {
+    Dat(); Dit(); Dit(); Dit(); Dit();
+  }
+  else if (letter == "7")
+  {
+    Dat(); Dat(); Dit(); Dit(); Dit();
+  }
+  else if (letter == "8")
+  {
+    Dat(); Dat(); Dat(); Dit(); Dit();
+  }
+  else if (letter == "9")
+  {
+    Dat(); Dat(); Dat(); Dat(); Dit();
+  }
+  else if (letter == " ")
+  {
+    beep(false);
+  }
+  beep(false); beep(false); beep(false);
 }
